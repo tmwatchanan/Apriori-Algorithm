@@ -71,9 +71,11 @@ for itemsetIndex = 1:3
     List{itemsetIndex, 2}(candidateCondition, :) = [];
 end
 
-disp(['[Frequent Patterns ' num2str(itemsetIndex) '-itemset']);
-for l = 1:length(List{itemsetIndex, 1})
-    disp([mat2str(List{itemsetIndex, 1}(l, :)) ' : ' num2str(List{itemsetIndex, 2}(l))]);
+for fp = 1:itemsetIndex
+    disp(['[Frequent Patterns] ' num2str(fp) '-itemset']);
+    for l = 1:length(List{fp, 1})
+        disp([mat2str(List{fp, 1}(l, :)) ' : ' num2str(List{fp, 2}(l))]);
+    end
 end
 
 %% Association Rules
@@ -96,15 +98,15 @@ for k = 1:size(List{itemsetIndex, 1}, 1)
         unionIdx = find(ismember(List{length(union{it}), 1}, union{it}, 'rows') == 1);
         unionFreq = List{length(union{it}), 2}(unionIdx);
         for w = 1:2 % That is inverse of head and tail itemset
+            headIdx = find(ismember(List{length(head{it, w}), 1}, head{it, w}, 'rows') == 1);
+            headFreq = List{length(head{it, w}), 2}(headIdx);
             tailIdx = find(ismember(List{length(tail{it, w}), 1}, tail{it, w}, 'rows') == 1);
             tailFreq = List{length(tail{it, w}), 2}(tailIdx);
             support = unionFreq / transactionCount;
-            confidence = support / tailFreq;
-            disp([num2str(head{it, w}) ' -> ' num2str(tail{it, w}) ' (' num2str(support*100) '%, ' num2str(confidence*100) '%)']);
-            associationRules{end+1, 1} = {head{it, w} tail{it, w} support confidence};
-            if support >= sup_min_percent && confidence >= conf_min_percent
-                strongAssociationRules{end+1, 1} = associationRules{end, 1};
-            end
+            confidence = support / (tailFreq/transactionCount);
+            lift = support / ((headFreq/transactionCount) * (tailFreq/transactionCount));
+            disp([num2str(head{it, w}) ' -> ' num2str(tail{it, w}) ' (' num2str(support*100, '%.1f') '%, ' num2str(confidence*100, '%.1f') '%) : ' num2str(lift, '%.1f')]);
+            associationRules{end+1, 1} = {head{it, w} tail{it, w} support confidence lift};
         end
     end    
 end
